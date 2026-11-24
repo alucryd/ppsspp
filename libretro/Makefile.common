@@ -296,6 +296,23 @@ SOURCES_C += \
 	$(EXTDIR)/libchdr/src/libchdr_flac.c \
 	$(EXTDIR)/libchdr/src/libchdr_huffman.c
 
+# ORE, oxyROMon's ROM enclosure, read through smelt, a Rust static library:
+# HAVE_ORE=1 SMELT_DIR=<oxyromon>/crates/smelt-rs, built there first with
+# `cargo build --release`
+HAVE_ORE ?= 0
+ifeq ($(HAVE_ORE), 1)
+SMELT_LIB ?= $(SMELT_DIR)/target/release/libsmelt.a
+COREFLAGS += -DUSE_SMELT
+INCFLAGS += -I$(SMELT_DIR)/include
+# With the system libraries it needs, as rustc --print native-static-libs
+# names them: only Linux's are known here
+ifneq (,$(findstring unix,$(platform)))
+LDFLAGS += $(SMELT_LIB) -lpthread -ldl -lm -lrt -lutil
+else
+$(error HAVE_ORE=1 links smelt on platform=unix only; on $(platform) it needs that platform's system libraries)
+endif
+endif
+
 INCFLAGS += -I$(EXTDIR)/at3_standalone
 
 SOURCES_CXX += \

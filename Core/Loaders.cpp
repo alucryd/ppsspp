@@ -114,7 +114,7 @@ IdentifiedFileType Identify_File(FileLoader *fileLoader, std::string *errorStrin
 	}
 
 	bool isDiscImage = false;
-	if (extension == ".iso" || extension == ".cso" || extension == ".chd") {
+	if (extension == ".iso" || extension == ".cso" || extension == ".chd" || extension == ".ore") {
 		isDiscImage = true;
 	} else if (extension == ".cue" || extension == ".ccd" || extension == ".mds") {
 		// A PS1 disc, which boots as a converted EBOOT (see PS1EbootFileLoader).

@@ -302,6 +302,7 @@
     <ClCompile Include="TestVFS.cpp" />
     <ClCompile Include="TestZipSlip.cpp" />
     <ClCompile Include="TestPS1Eboot.cpp" />
+    <ClCompile Include="TestORE.cpp" />
     <ClCompile Include="UnitTest.cpp" />
     <ClCompile Include="TestArmEmitter.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|ARM64'">true</ExcludedFromBuild>
@@ -353,6 +354,7 @@
     <ClInclude Include="TestVertexJit.h" />
     <ClInclude Include="UnitTest.h" />
   </ItemGroup>
+  <Import Project="..\Windows\smelt.props" />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

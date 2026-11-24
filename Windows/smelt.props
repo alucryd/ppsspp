@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ORE disc images, read through smelt, oxyROMon's ORE reader (its crates/smelt-rs). Off unless
+  SmeltDir is set, on the command line (msbuild /p:SmeltDir=<oxyromon>\crates\smelt-rs) or in the
+  environment. The same thing as CMake's USE_SMELT and SMELT_DIR.
+
+  smelt.lib has to be built for the platform being built and against the static C runtime, as
+  PPSSPP is: a cargo release build of crates/smelt-rs/Cargo.toml with
+  RUSTFLAGS=-C target-feature=+crt-static. SmeltLib names a smelt.lib elsewhere, such as one
+  built for ARM64.
+
+  Imported after a project's own settings, which don't carry inherited include directories.
+-->
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Condition="'$(SmeltDir)' != ''">
+    <SmeltLib Condition="'$(SmeltLib)' == ''">$(SmeltDir)\target\release\smelt.lib</SmeltLib>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(SmeltDir)' != ''">
+    <ClCompile>
+      <PreprocessorDefinitions>USE_SMELT;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>$(SmeltDir)\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <!-- smelt.lib, and the system libraries cargo's print native-static-libs names for it -->
+      <AdditionalDependencies>$(SmeltLib);bcrypt.lib;advapi32.lib;kernel32.lib;ntdll.lib;userenv.lib;ws2_32.lib;dbghelp.lib;synchronization.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+</Project>

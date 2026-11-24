@@ -223,4 +223,23 @@ private:
 	u32 numBlocks = 0;
 };
 
+#ifdef USE_SMELT
+struct smelt_ingot;
+
+// An ORE, oxyROMon's ROM enclosure, read through smelt, its reader library. smelt opens an ORE by
+// its path, from which a thin ORE finds the store its chunks lie in, so it has to be a local file.
+class OREFileBlockDevice : public BlockDevice {
+public:
+	OREFileBlockDevice(FileLoader *fileLoader);
+	~OREFileBlockDevice();
+	bool ReadBlock(int blockNumber, u8 *outPtr, bool uncached = false) override;
+	bool ReadBlocks(u32 minBlock, int count, u8 *outPtr) override;
+	u32 GetNumBlocks() const override { return numBlocks_; }
+	bool IsDisc() const override { return true; }
+private:
+	struct smelt_ingot *ingot_ = nullptr;
+	u32 numBlocks_ = 0;
+};
+#endif
+
 BlockDevice *ConstructBlockDevice(FileLoader *fileLoader, std::string *errorString);

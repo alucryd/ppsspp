@@ -34,6 +34,9 @@
 #include "Core/FileSystems/ISOFileSystem.h"
 #include "Core/Util/PathUtil.h"
 #include "libchdr/chd.h"
+#ifdef USE_SMELT
+#include "smelt.h"
+#endif
 
 #include "zlib.h"
 #include "ext/libkirk/amctrl.h"
@@ -258,6 +261,14 @@ BlockDevice *ConstructBlockDevice(FileLoader *fileLoader, std::string *errorStri
 		}
 	} else if (!memcmp(buffer, "MComprHD", 8)) {
 		device = new CHDFileBlockDevice(fileLoader);
+	} else if (!memcmp(buffer, "ORE", 3) && buffer[3] >= '0' && buffer[3] <= '9') {
+		// Any layout's: smelt says itself which it can't read
+#ifdef USE_SMELT
+		device = new OREFileBlockDevice(fileLoader);
+#else
+		*errorString = "This build of PPSSPP can't read ORE images";
+		return nullptr;
+#endif
 	}
 
 	if (!device) {
@@ -1266,3 +1277,60 @@ bool CHDFileBlockDevice::ReadBlocks(u32 minBlock, int count, u8 *outPtr) {
 	}
 	return true;
 }
+
+#ifdef USE_SMELT
+
+OREFileBlockDevice::OREFileBlockDevice(FileLoader *fileLoader)
+	: BlockDevice(fileLoader) {
+	const Path path = fileLoader->GetPath();
+	if (path.Type() != PathType::NATIVE) {
+		errorString_ = "An ORE can only be read from a local file: " + path.ToVisualString();
+		return;
+	}
+	if (smelt_open(path.c_str(), nullptr, &ingot_) != SMELT_OK) {
+		errorString_ = StringFromFormat("ORE error: %s: %s", path.c_str(), smelt_last_error());
+		ingot_ = nullptr;
+		return;
+	}
+	// A PSP disc, or any other ISO an ORE holds, is whole 2048-byte blocks; a cartridge ROM need not be.
+	uint64_t size = 0;
+	if (smelt_logical_size(ingot_, &size) != SMELT_OK || size % GetBlockSize() != 0 || size / GetBlockSize() > 0xFFFFFFFFULL) {
+		errorString_ = StringFromFormat("ORE error: %s: not a disc image", path.c_str());
+		smelt_close(ingot_);
+		ingot_ = nullptr;
+		return;
+	}
+	numBlocks_ = (u32)(size / GetBlockSize());
+}
+
+OREFileBlockDevice::~OREFileBlockDevice() {
+	smelt_close(ingot_);
+}
+
+bool OREFileBlockDevice::ReadBlock(int blockNumber, u8 *outPtr, bool uncached) {
+	return ReadBlocks((u32)blockNumber, 1, outPtr);
+}
+
+bool OREFileBlockDevice::ReadBlocks(u32 minBlock, int count, u8 *outPtr) {
+	if (!ingot_ || count <= 0) {
+		return false;
+	}
+	// What lies past the disc's end reads as zeros, and fails, as with a CHD
+	u32 inside = minBlock >= numBlocks_ ? 0 : std::min((u32)count, numBlocks_ - minBlock);
+	if (inside < (u32)count) {
+		memset(outPtr + (size_t)inside * GetBlockSize(), 0, (size_t)(count - inside) * GetBlockSize());
+	}
+	if (inside == 0) {
+		return false;
+	}
+	smelt_err err = smelt_read(ingot_, (uint64_t)minBlock * GetBlockSize(), outPtr, (size_t)inside * GetBlockSize());
+	if (err != SMELT_OK) {
+		ERROR_LOG(Log::Loader, "ORE read failed: %d %d %s", minBlock, count, smelt_last_error());
+		NotifyReadError(smelt_last_error());
+		memset(outPtr, 0, (size_t)inside * GetBlockSize());
+		return false;
+	}
+	return inside == (u32)count;
+}
+
+#endif

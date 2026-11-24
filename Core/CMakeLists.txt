@@ -776,6 +776,27 @@ if(USE_DISCORD AND NOT IOS AND NOT LIBRETRO)
 	target_link_libraries(Core discord-rpc)
 endif()
 
+# ORE, oxyROMon's ROM enclosure, read through smelt: its include/smelt.h and its static library,
+# built with cargo from oxyROMon's crates/smelt-rs, under SMELT_DIR
+if(USE_SMELT)
+	find_path(SMELT_INCLUDE_DIR smelt.h HINTS ${SMELT_DIR}/include ${SMELT_DIR} NO_DEFAULT_PATH)
+	# The static library by its file name: cargo builds the shared one beside it, which "smelt" finds first
+	find_library(SMELT_LIBRARY NAMES libsmelt.a smelt.lib HINTS ${SMELT_DIR}/lib ${SMELT_DIR}/target/release ${SMELT_DIR} NO_DEFAULT_PATH)
+	if(NOT SMELT_INCLUDE_DIR OR NOT SMELT_LIBRARY)
+		message(FATAL_ERROR "USE_SMELT is ON but smelt.h or libsmelt is not under SMELT_DIR (${SMELT_DIR})")
+	endif()
+	target_compile_definitions(Core PUBLIC USE_SMELT)
+	target_include_directories(Core PRIVATE ${SMELT_INCLUDE_DIR})
+	target_link_libraries(Core ${SMELT_LIBRARY})
+	if(WIN32)
+		# What cargo's --print native-static-libs names for an MSVC build of smelt. That build uses the
+		# DLL C runtime, as CMake's MSVC default does; Windows/smelt.props's /MT one needs +crt-static.
+		target_link_libraries(Core bcrypt advapi32 kernel32 ntdll userenv ws2_32 dbghelp synchronization)
+	elseif(UNIX)
+		target_link_libraries(Core pthread dl m)
+	endif()
+endif()
+
 # The other half of the miniUPnPc integration above: that half sets up the compile definitions
 # (which had to happen before add_library(Core STATIC ...)), this half builds/links the library
 # (which needs the Core target to already exist).

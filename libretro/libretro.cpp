@@ -1347,7 +1347,11 @@ void retro_get_system_info(struct retro_system_info *info)
    info->library_name     = "PPSSPP";
    info->library_version  = PPSSPP_GIT_VERSION;
    info->need_fullpath    = true;
+#ifdef USE_SMELT
+   info->valid_extensions = "elf|iso|cso|prx|pbp|chd|ore";
+#else
    info->valid_extensions = "elf|iso|cso|prx|pbp|chd";
+#endif
 }
 
 void retro_get_system_av_info(struct retro_system_av_info *info)

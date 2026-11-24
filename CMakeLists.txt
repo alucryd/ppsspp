@@ -200,6 +200,8 @@ option(USE_SYSTEM_SNAPPY "Dynamically link against system snappy" ${USE_SYSTEM_S
 option(USE_SYSTEM_FFMPEG "Dynamically link against system FFMPEG" ${USE_SYSTEM_FFMPEG})
 option(USE_SYSTEM_FREETYPE "Dynamically link against system freetype" ${USE_SYSTEM_FREETYPE})
 option(USE_SYSTEM_LIBCHDR "Dynamically link against system libchdr" ${USE_SYSTEM_LIBCHDR})
+option(USE_SMELT "Read ORE disc images through smelt, oxyROMon's ORE reader, found under SMELT_DIR" OFF)
+set(SMELT_DIR "" CACHE PATH "Where smelt's include/smelt.h and libsmelt are")
 option(USE_SYSTEM_LIBZIP "Dynamically link against system libzip" ${USE_SYSTEM_LIBZIP})
 
 option(USE_SYSTEM_LIBPNG "Dynamically link against system libpng" ON)
@@ -1385,6 +1387,7 @@ if(UNITTEST)
 		unittest/TestVFS.cpp
 		unittest/TestZipSlip.cpp
 		unittest/TestPS1Eboot.cpp
+		unittest/TestORE.cpp
 		unittest/TestLzrc.cpp
 		unittest/TestKirk.cpp
 		unittest/TestCwCheat.cpp

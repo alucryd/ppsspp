@@ -428,7 +428,7 @@ namespace Reporting
 		return disc_id + "_" + disc_version;
 	}
 
-	// The container the game image is in, from its header: "cso", "chd", "pbp" or "iso". Empty for
+	// The container the game image is in, from its header: "cso", "chd", "ore", "pbp" or "iso". Empty for
 	// a directory. Cached, since it only changes with the game.
 	static std::string DiscContainer(const Path &path) {
 		static std::mutex cacheLock;
@@ -451,6 +451,8 @@ namespace Reporting
 			cachedContainer = "cso";
 		} else if (!memcmp(header, "MComprHD", 8)) {
 			cachedContainer = "chd";
+		} else if (!memcmp(header, "ORE", 3) && header[3] >= '0' && header[3] <= '9') {
+			cachedContainer = "ore";
 		} else if (!memcmp(header, "\0PBP", 4)) {
 			cachedContainer = "pbp";
 		} else {

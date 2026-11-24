@@ -287,8 +287,8 @@ static bool IsUmdPath(const Path &path, bool isDirectory) {
 		if (ext == ".iso" || ext == ".cso") {
 			return true;
 		}
-		// A CHD can hold a PS1 disc, and a PBP can be homebrew or a PS1 game.
-		if (ext != ".chd" && ext != ".pbp") {
+		// A CHD can hold a PS1 disc, a PBP can be homebrew or a PS1 game, and an ORE another system's game.
+		if (ext != ".chd" && ext != ".pbp" && ext != ".ore") {
 			return false;
 		}
 	}
